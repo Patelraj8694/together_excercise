@@ -1,0 +1,49 @@
+services:
+  # ---- Keyword Researcher Agent (ADK server) ----
+  agent:
+    build: .
+    command: adk web --port 8000 --host 0.0.0.0
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - agent-data:/app/keyword_researcher/.adk
+      # Mount host GCP credentials so the ADK Dev UI can authenticate
+      - ${APPDATA}/gcloud:/root/.config/gcloud:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/list-apps')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ---- Dash UI (Keyword Researcher frontend) ----
+  dash-ui:
+    build: .
+    command: python -m candidate_ui.app
+    ports:
+      - "8050:8050"
+    env_file:
+      - .env
+    environment:
+      - ADK_LOCAL_URL=http://agent:8000
+    depends_on:
+      agent:
+        condition: service_healthy
+
+  # ---- Budget Pacing Service (Flask API) ----
+  budget-pacing:
+    build: .
+    command: python -m budget_pacing.app
+    ports:
+      - "8080:8000"
+    env_file:
+      - .env
+    volumes:
+      - bp-data:/app/data
+    environment:
+      - BP_DATABASE_URI=sqlite:////app/data/budget_pacing.db
+
+volumes:
+  agent-data:
+  bp-data:

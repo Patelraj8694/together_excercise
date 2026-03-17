@@ -1,0 +1,35 @@
+# Environment variables (secrets)
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# SQLite databases (runtime data, auto-created)
+*.db
+
+# ADK session storage (auto-created by adk web)
+.adk/
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# GCP credentials (never commit)
+sa-key.json
+*-credentials.json

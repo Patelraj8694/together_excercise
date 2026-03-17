@@ -84,3 +84,5 @@ python app.py
 ```
 
 Open http://localhost:8050. Implement callbacks so the UI sends user messages to your deployed endpoint and displays the agent response (keywords, markets, recommendations) in a clear, structured way.
+
+https://console.cloud.google.com/welcome
