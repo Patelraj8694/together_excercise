@@ -85,4 +85,52 @@ python app.py
 
 Open http://localhost:8050. Implement callbacks so the UI sends user messages to your deployed endpoint and displays the agent response (keywords, markets, recommendations) in a clear, structured way.
 
-https://console.cloud.google.com/welcome
+---
+
+## Quick Start (Run Everything)
+
+> `.env` file is included — no API key setup needed.
+
+### Option A: Docker Compose (one command) -- Recommended and Easiest
+
+```bash
+docker-compose up -d
+```
+
+### Option B: Local (3 terminals) - Last Resort
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate        # Windows  (source .venv/bin/activate on Mac/Linux)
+pip install -r requirements.txt
+
+# Terminal 1 — Agent server
+adk web --port 8000
+
+# Terminal 2 — Keyword Researcher UI
+python -m candidate_ui.app
+
+# Terminal 3 — Budget Pacing API
+python -m budget_pacing.app
+```
+
+### URLs
+
+| URL | Service | What You See |
+|-----|---------|-------------|
+| http://localhost:8050 | Keyword Researcher UI | Chat interface — ask for keywords, markets, recommendations |
+| http://localhost:8080/apidocs | Budget Pacing API | Swagger UI — click "Try it out" to test POST /event and GET /bid |
+| http://localhost:8000 | ADK Dev UI | Agent debug console (development only) |
+
+### Run Tests
+
+```bash
+pytest budget_pacing/tests/ -v
+# 57 passed
+```
+
+### Full Documentation
+
+- [SUBMISSION.md](SUBMISSION.md) — Complete technical deep-dive (architecture, algorithms, every test explained)
+- [CLOUD_SETUP.md](CLOUD_SETUP.md) — Step-by-step GCP setup walkthrough
+- [budget_pacing/INTERVIEW.md](budget_pacing/INTERVIEW.md) — Interview prep for Task 1
