@@ -89,7 +89,7 @@ Open http://localhost:8050. Implement callbacks so the UI sends user messages to
 
 ---
 
-## Excdercise Implemetion and Using Details
+## Exercise Implementation Details
 
 ### Project Structure (after implementation)
 
