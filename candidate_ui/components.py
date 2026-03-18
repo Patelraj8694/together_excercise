@@ -76,27 +76,30 @@ def parse_agent_response(text: str) -> list:
     if not _SECTION_PATTERN.search(text):
         return [dcc.Markdown(text, dangerously_allow_html=False, className="agent-markdown")]
 
+    # re.split with a capturing group interleaves captured headers into the
+    # result: [leading, header1, body1, header2, body2, ...]
     parts = _SECTION_PATTERN.split(text)
-    headers = _SECTION_PATTERN.findall(text)
 
     components: list = []
 
-    # Leading text before the first header
-    if parts and parts[0].strip():
+    # Leading text before the first header (parts[0])
+    if parts[0].strip():
         components.append(
             dcc.Markdown(parts[0].strip(), dangerously_allow_html=False, className="agent-markdown")
         )
 
-    for header, body in zip(headers, parts[1:]):
+    # Iterate header/body pairs via stride-2 indexing
+    for header, body in zip(parts[1::2], parts[2::2]):
         header = header.strip().rstrip(":")
         body = body.strip()
         if not body:
             continue
 
+        css_class = header.lower().replace(" ", "-")
         icon = _SECTION_ICONS.get(header.lower(), "[-]")
         components.append(
             html.Div(
-                className=f"response-section section-{header.lower()}",
+                className=f"response-section section-{css_class}",
                 children=[
                     html.H3(f"{icon} {header}", className="section-header"),
                     dcc.Markdown(body, dangerously_allow_html=False, className="section-body"),

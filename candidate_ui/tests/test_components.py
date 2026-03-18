@@ -119,6 +119,37 @@ class TestParseAgentResponse:
         sections = [c for c in result if hasattr(c, "className") and "response-section" in (c.className or "")]
         assert len(sections) == 3
 
+    def test_multiple_sections_content_correct(self):
+        """Verify each section gets the RIGHT body (not off-by-one)."""
+        text = (
+            "**Keywords:**\n- shoes\n\n"
+            "**Markets:**\n- US\n\n"
+            "**Recommendations:**\n1. Bid higher"
+        )
+        result = parse_agent_response(text)
+        sections = [c for c in result if hasattr(c, "className") and "response-section" in (c.className or "")]
+        assert len(sections) == 3
+
+        # section-keywords should contain "shoes"
+        kw_body = sections[0].children[1].children  # dcc.Markdown.children = text
+        assert "shoes" in kw_body
+
+        # section-markets should contain "US"
+        mkt_body = sections[1].children[1].children
+        assert "US" in mkt_body
+
+        # section-recommendations should contain "Bid higher"
+        rec_body = sections[2].children[1].children
+        assert "Bid higher" in rec_body
+
+    def test_next_steps_css_class(self):
+        """'Next Steps' should produce class 'section-next-steps' (hyphenated)."""
+        text = "**Next Steps:**\n1. Do something"
+        result = parse_agent_response(text)
+        sections = [c for c in result if hasattr(c, "className") and "response-section" in (c.className or "")]
+        assert len(sections) == 1
+        assert "section-next-steps" in sections[0].className
+
     def test_case_insensitive(self):
         text = "keywords:\n- test keyword"
         result = parse_agent_response(text)

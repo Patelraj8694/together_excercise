@@ -4,7 +4,6 @@ Separated from callbacks to follow single-responsibility principle.
 CSS is auto-loaded from assets/styles.css by Dash.
 """
 
-import dash
 from dash import dcc, html
 
 # ---------------------------------------------------------------------------

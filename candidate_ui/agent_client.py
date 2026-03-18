@@ -100,11 +100,20 @@ class AgentClient:
             resp = requests.post(url, json={}, timeout=10)
             resp.raise_for_status()
             data = resp.json()
-            return data["id"]
+            session_id = data.get("id")
+            if not session_id:
+                raise ConnectionError(
+                    f"ADK server returned no session ID. Response: {data}"
+                )
+            return session_id
         except requests.exceptions.ConnectionError:
             raise ConnectionError(
                 f"Cannot connect to local ADK server at {self._local_url}. "
                 f"Run: adk web --port 8000"
+            )
+        except requests.exceptions.RequestException as exc:
+            raise ConnectionError(
+                f"ADK server error: {exc}"
             )
 
     def _send_local(self, session_id: str, message: str) -> str:
@@ -131,6 +140,10 @@ class AgentClient:
             raise ConnectionError(
                 f"Cannot connect to local ADK server at {self._local_url}. "
                 f"Run: adk web --port 8000"
+            )
+        except requests.exceptions.RequestException as exc:
+            raise ConnectionError(
+                f"ADK server error: {exc}"
             )
 
     @staticmethod

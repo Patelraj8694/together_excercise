@@ -78,7 +78,7 @@ def register_callbacks(app: dash.Dash, agent: AgentClient) -> None:
 
         all_convs = all_convs or {}
         if not all_convs:
-            return html.P("No conversations yet.", className="sidebar-empty")
+            return [html.P("No conversations yet.", className="sidebar-empty")]
 
         sorted_convs = sorted(
             all_convs.items(),
