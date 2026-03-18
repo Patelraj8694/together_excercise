@@ -16,8 +16,8 @@ class Event(db.Model):
         Auto-incrementing primary key.
     campaign_id : str
         Identifier of the campaign that won the auction.
-    cost : float
-        Dollar amount paid for the win (always > 0).
+    cost : Decimal
+        Dollar amount paid for the win (always > 0, stored as NUMERIC(10,2)).
     timestamp : datetime
         When the auction was won (timezone-aware, stored as UTC).
     event_date : str
@@ -31,8 +31,8 @@ class Event(db.Model):
     __tablename__ = "events"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    campaign_id = db.Column(db.String(64), nullable=False, index=True)
-    cost = db.Column(db.Float, nullable=False)
+    campaign_id = db.Column(db.String(64), nullable=False)
+    cost = db.Column(db.Numeric(10, 2), nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), nullable=False)
     event_date = db.Column(db.String(10), nullable=False)
     created_at = db.Column(

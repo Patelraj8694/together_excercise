@@ -50,7 +50,7 @@ SWAGGER_TEMPLATE = {
 }
 
 
-def create_app(config=None) -> Flask:
+def create_app(config: "Config | None" = None) -> Flask:
     """Application factory.
 
     Parameters
@@ -85,6 +85,19 @@ def create_app(config=None) -> Flask:
 
     # Swagger UI — interactive API docs at /apidocs
     Swagger(app, config=SWAGGER_CONFIG, template=SWAGGER_TEMPLATE)
+
+    # Global error handlers — always return JSON, never HTML
+    @app.errorhandler(404)
+    def not_found(_exc):
+        return jsonify({"detail": "Not found."}), 404
+
+    @app.errorhandler(405)
+    def method_not_allowed(_exc):
+        return jsonify({"detail": "Method not allowed."}), 405
+
+    @app.errorhandler(500)
+    def internal_error(_exc):
+        return jsonify({"detail": "Internal server error."}), 500
 
     @app.route("/")
     def index():

@@ -1,6 +1,12 @@
 """Core business logic: pacing algorithm, circuit breaker, bid computation."""
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from budget_pacing.config import Config
 
 from budget_pacing.models.campaign import CampaignConfig
 from budget_pacing.models.database import db
@@ -32,7 +38,7 @@ class BudgetPacingService:
         Application configuration (daily_limit, max_bid, etc.).
     """
 
-    def __init__(self, config) -> None:
+    def __init__(self, config: Config) -> None:
         self._config = config
 
     # ------------------------------------------------------------------
@@ -45,6 +51,11 @@ class BudgetPacingService:
         Raises :class:`BudgetExceededError` if the daily limit would be
         breached.  The check and insert happen inside a single database
         transaction for atomicity.
+
+        Note: SQLite serialises writes, so the read-check-insert
+        sequence is safe.  For PostgreSQL/MySQL in production, use
+        ``SELECT ... FOR UPDATE`` or a serialisable transaction to
+        prevent TOCTOU races under concurrent writes.
         """
         ts_utc = payload.timestamp.astimezone(timezone.utc)
         event_date = ts_utc.strftime("%Y-%m-%d")

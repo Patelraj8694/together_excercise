@@ -14,14 +14,14 @@ class CampaignConfig(db.Model):
     __tablename__ = "campaign_config"
 
     campaign_id = db.Column(db.String(64), primary_key=True)
-    daily_limit = db.Column(db.Float, nullable=True)
-    max_bid = db.Column(db.Float, nullable=True)
-    base_bid = db.Column(db.Float, nullable=True)
+    daily_limit = db.Column(db.Numeric(10, 2), nullable=True)
+    max_bid = db.Column(db.Numeric(10, 2), nullable=True)
+    base_bid = db.Column(db.Numeric(10, 2), nullable=True)
 
     def __repr__(self) -> str:
         return f"<CampaignConfig {self.campaign_id}>"
 
     @classmethod
-    def get_config(cls, campaign_id: str):
+    def get_config(cls, campaign_id: str) -> "CampaignConfig | None":
         """Return the config row for *campaign_id*, or ``None``."""
         return db.session.get(cls, campaign_id)
