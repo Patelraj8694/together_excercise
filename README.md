@@ -245,6 +245,18 @@ product_engineer_tech_exercise/
 
 > `.env` file is included — no API key setup needed.
 
+### Clone Repo
+
+```bash
+git clone https://github.com/Patelraj8694/together_excercise.git
+```
+
+### Directory
+
+```bash
+cd together_excercise
+```
+
 ### Option A: Docker Compose (one command) — Recommended
 
 ```bash
