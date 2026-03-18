@@ -125,6 +125,6 @@ python -m budget_pacing.app
 ### Run Tests
 
 ```bash
-pytest budget_pacing/tests/ -v
-# 57 passed
+pytest budget_pacing/tests/ -v   # 57 passed (pacing, schemas, models, API)
+pytest candidate_ui/tests/ -v    # 28 passed (rendering, parsing, SSE)
 ```

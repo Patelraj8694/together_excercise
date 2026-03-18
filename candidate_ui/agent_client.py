@@ -8,9 +8,12 @@ The backend is selected automatically based on whether
 ``REASONING_ENGINE_RESOURCE_NAME`` is set in the environment.
 """
 
+import json
 import os
-import uuid
+
 import requests
+
+__all__ = ["AgentClient"]
 
 
 class AgentClient:
@@ -25,13 +28,12 @@ class AgentClient:
         self._local_url = os.getenv("ADK_LOCAL_URL", "http://localhost:8000").strip()
 
         self._remote_app = None
-        self._sessions: dict[str, object] = {}
 
         if self._resource_name and self._project:
-            self._mode = "vertex"
+            self.mode = "vertex"
             self._init_vertex()
         else:
-            self._mode = "local"
+            self.mode = "local"
 
     # ------------------------------------------------------------------
     # Initialisation
@@ -52,23 +54,19 @@ class AgentClient:
 
     def create_session(self) -> str:
         """Create a new conversation session and return its ID."""
-        if self._mode == "vertex":
+        if self.mode == "vertex":
             session = self._remote_app.create_session()
-            session_id = session.id if hasattr(session, "id") else str(session)
-            self._sessions[session_id] = session
-            return session_id
-        else:
-            return self._create_local_session()
+            return session.id if hasattr(session, "id") else str(session)
+        return self._create_local_session()
 
     def send_message(self, session_id: str, message: str) -> str:
         """Send *message* to the agent in the given session.
 
         Returns the agent's text reply.
         """
-        if self._mode == "vertex":
+        if self.mode == "vertex":
             return self._send_vertex(session_id, message)
-        else:
-            return self._send_local(session_id, message)
+        return self._send_local(session_id, message)
 
     # ------------------------------------------------------------------
     # Vertex AI backend
@@ -127,7 +125,7 @@ class AgentClient:
             resp.raise_for_status()
 
             # Parse SSE-style response — extract the last agent text
-            agent_text = self._parse_adk_response(resp.text)
+            agent_text = self.parse_adk_response(resp.text)
             return agent_text if agent_text else resp.text
         except requests.exceptions.ConnectionError:
             raise ConnectionError(
@@ -136,10 +134,8 @@ class AgentClient:
             )
 
     @staticmethod
-    def _parse_adk_response(raw: str) -> str:
+    def parse_adk_response(raw: str) -> str:
         """Extract the final agent text from an ADK SSE response."""
-        import json
-
         agent_text = ""
         for line in raw.split("\n"):
             line = line.strip()
@@ -149,7 +145,6 @@ class AgentClient:
                     continue
                 try:
                     data = json.loads(data_str)
-                    # Look for agent content in various shapes
                     content = data.get("content", {})
                     if isinstance(content, dict):
                         parts = content.get("parts", [])
