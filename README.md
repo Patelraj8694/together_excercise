@@ -87,17 +87,171 @@ Open http://localhost:8050. Implement callbacks so the UI sends user messages to
 
 ---
 
+---
+
+## Excdercise Implemetion and Using Details
+
+### Project Structure (after implementation)
+
+```
+product_engineer_tech_exercise/
+│
+├── .env.example                        # Config template (committed, no secrets)
+├── .env                                # Actual config (git-ignored, shared separately)
+├── .gitignore
+├── .dockerignore
+├── Dockerfile                          # Shared image (Python 3.12-slim)
+├── docker-compose.yml                  # Orchestrates all 3 services
+├── requirements.txt                    # Unified Python dependencies
+├── deploy.py                           # Deploy keyword_researcher to Vertex AI
+├── SUBMISSION.md                       # Full technical deep-dive
+├── CLOUD_SETUP.md                      # GCP setup walkthrough
+│
+├── budget_pacing/                      # TASK 1 — Budget Pacing Service
+│   ├── app.py                          #   Flask application factory + Swagger
+│   ├── config.py                       #   Configuration (reads BP_ env vars)
+│   ├── services.py                     #   Business logic (pacing algorithm + circuit breaker)
+│   ├── controllers/
+│   │   ├── event_controller.py         #   POST /event — record auction wins
+│   │   └── bid_controller.py           #   GET  /bid  — get paced bid recommendation
+│   ├── models/
+│   │   ├── database.py                 #   SQLAlchemy db singleton
+│   │   ├── event.py                    #   Event model + get_daily_spend()
+│   │   └── campaign.py                 #   CampaignConfig per-campaign overrides
+│   ├── schemas/
+│   │   ├── event_schema.py             #   EventRequest/Response (Pydantic v2)
+│   │   └── bid_schema.py              #   BidRequest/Response (Pydantic v2)
+│   ├── tests/                          #   57 tests
+│   │   ├── conftest.py                 #     Shared fixtures (in-memory SQLite)
+│   │   ├── test_pacing.py              #     14 pacing math tests
+│   │   ├── test_schemas.py             #     13 validation tests
+│   │   ├── test_models.py              #     6 model tests
+│   │   ├── test_circuit_breaker.py     #     9 budget safety tests
+│   │   ├── test_api_events.py          #     8 POST /event integration tests
+│   │   └── test_api_bids.py            #     7 GET /bid integration tests
+│   └── INTERVIEW.md                    #   Interview prep document
+│
+├── candidate_ui/                       # TASK 2 — Keyword Researcher Dash UI
+│   ├── app.py                          #   Application factory & entry-point
+│   ├── layout.py                       #   Dash component tree (sidebar + main panel)
+│   ├── callbacks.py                    #   All callback registrations (consolidated)
+│   ├── components.py                   #   Pure rendering/parsing helpers
+│   ├── agent_client.py                 #   Backend client (local ADK / Vertex AI)
+│   ├── assets/
+│   │   └── styles.css                  #   CSS (auto-served by Dash convention)
+│   └── tests/                          #   28 tests
+│       ├── test_components.py          #     18 rendering/parsing tests
+│       └── test_agent_client.py        #     10 SSE parser tests
+│
+└── keyword_researcher/                 # GIVEN — Multi-agent ADK package
+    ├── agent.py                        #   Root agent + 3 specialist sub-agents
+    └── prompt.py                       #   System instructions per agent
+```
+
+---
+
+### Task 1: Budget Pacing Service — Architecture
+
+**What it does:** Recommends optimised bids for ad campaigns to spread daily budget evenly throughout the day.
+
+**Pattern:** MVC (Model-View-Controller) with Application Factory
+
+```
+                    ┌──────────────────────────────────────────────┐
+  HTTP Request      │              Flask Application               │
+  ──────────────>   │                                              │
+                    │  controllers/        services.py              │
+  POST /event  ───> │  event_controller ──> BudgetPacingService    │
+                    │                       ├─ record_event()      │
+                    │                       │  (circuit breaker)   │
+  GET  /bid    ───> │  bid_controller   ──> ├─ get_bid()           │
+                    │                       │  (pacing algorithm)  │
+                    │                       │                      │
+                    │  schemas/             models/                 │
+                    │  Pydantic v2    <──>  SQLAlchemy (SQLite)    │
+                    │  (validation)         (persistence)           │
+                    │                                              │
+                    │  Flasgger ──> Swagger UI at /apidocs         │
+                    └──────────────────────────────────────────────┘
+```
+
+**Key algorithms:**
+- **Inverse-ratio pacing:** `bid = base_bid × clamp(1/spend_ratio, min, max)` — bids up when behind schedule, down when ahead
+- **Circuit breaker:** Rejects events that would exceed daily budget (HTTP 409), returns `bid=0` when limit is reached
+
+---
+
+### Task 2: Keyword Researcher UI — Architecture
+
+**What it does:** Chat interface to a multi-agent AI system that discovers keywords, analyses markets, and generates campaign recommendations.
+
+**Pattern:** Modular Dash with Application Factory + Separation of Concerns
+
+```
+┌─────────────────────────────────────────────────────┐
+│  candidate_ui/ (Dash App)                           │
+│                                                     │
+│  app.py ─── create_app() factory                    │
+│    ├── layout.py     → Component tree (sidebar +    │
+│    │                    main chat panel)             │
+│    ├── callbacks.py  → Consolidated event handlers   │
+│    │     │                                          │
+│    │     ├── new-chat-btn  ─┐                       │
+│    │     ├── conv-btn       ├─> Single callback     │
+│    │     └── send-btn      ─┘   (ctx.triggered_id)  │
+│    │                                                │
+│    ├── components.py → Pure rendering helpers        │       ┌──────────────────┐
+│    │     ├── render_conversation()                   │       │  ADK Agent       │
+│    │     ├── parse_agent_response()                  │       │  (port 8000)     │
+│    │     └── truncate_title()                        │       │                  │
+│    │                                                │       │  Root Agent      │
+│    └── agent_client.py ─────────────────────────────│──────>│  ├── Keyword     │
+│          ├── mode: "local" or "vertex"              │       │  ├── Market      │
+│          ├── create_session()                        │       │  └── Recommend.  │
+│          ├── send_message()                          │       │                  │
+│          └── parse_adk_response()                    │<──────│  Gemini 2.5 Flash│
+│                                                     │       │  + google_search │
+│  assets/styles.css → Dash auto-served CSS           │       └──────────────────┘
+│  dcc.Store (localStorage) → Persistent conversations │
+└─────────────────────────────────────────────────────┘
+```
+
+**Key features:**
+- **Conversation sidebar** — persistent history in browser localStorage, switch between chats
+- **Dual backend** — auto-detects local ADK vs Vertex AI from env vars
+- **Structured parsing** — agent responses split into colour-coded Keywords/Markets/Recommendations cards
+- **XSS protection** — `dangerously_allow_html=False` on all Markdown rendering
+
+---
+
+### How the 3 Services Connect (Docker Compose)
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  dash-ui     │────>│  agent       │     │ budget-pacing│
+│  port 8050   │     │  port 8000   │     │ port 8080    │
+│              │     │              │     │              │
+│  Dash UI     │     │  ADK Server  │     │  Flask API   │
+│  (chat)      │     │  (Gemini AI) │     │  (Swagger)   │
+└──────────────┘     └──────────────┘     └──────────────┘
+       │                    │                     │
+       └──── depends_on ────┘                     │
+             (healthcheck)              (independent service)
+```
+
+---
+
 ## Quick Start (Run Everything)
 
 > `.env` file is included — no API key setup needed.
 
-### Option A: Docker Compose (one command) -- Recommended and Easiest
+### Option A: Docker Compose (one command) — Recommended
 
 ```bash
 docker-compose up -d
 ```
 
-### Option B: Local (3 terminals) - Last Resort
+### Option B: Local (3 terminals)
 
 ```bash
 python -m venv .venv
@@ -122,7 +276,7 @@ python -m budget_pacing.app
 | http://localhost:8080/apidocs | Budget Pacing API | Swagger UI — click "Try it out" to test POST /event and GET /bid |
 | http://localhost:8000 | ADK Dev UI | Agent debug console (development only) |
 
-### Run Tests
+### Run Tests (85 total)
 
 ```bash
 pytest budget_pacing/tests/ -v   # 57 passed (pacing, schemas, models, API)
