@@ -254,7 +254,8 @@ git clone https://github.com/Patelraj8694/together_excercise.git
 ### Directory
 
 ```bash
-cd together_excercise
+cd together-excercise  OR
+cd together-excercise-main
 ```
 
 ### Option A: Docker Compose (one command) — Recommended
