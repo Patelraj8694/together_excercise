@@ -128,9 +128,3 @@ python -m budget_pacing.app
 pytest budget_pacing/tests/ -v
 # 57 passed
 ```
-
-### Full Documentation
-
-- [SUBMISSION.md](SUBMISSION.md) — Complete technical deep-dive (architecture, algorithms, every test explained)
-- [CLOUD_SETUP.md](CLOUD_SETUP.md) — Step-by-step GCP setup walkthrough
-- [budget_pacing/INTERVIEW.md](budget_pacing/INTERVIEW.md) — Interview prep for Task 1
