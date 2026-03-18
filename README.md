@@ -97,7 +97,7 @@ Open http://localhost:8050. Implement callbacks so the UI sends user messages to
 product_engineer_tech_exercise/
 │
 ├── .env.example                        # Config template (committed, no secrets)
-├── .env                                # Actual config (git-ignored, shared separately)
+├── .env                                # Actual config (git-ignored, shared separately but added for convenience)
 ├── .gitignore
 ├── .dockerignore
 ├── Dockerfile                          # Shared image (Python 3.12-slim)
