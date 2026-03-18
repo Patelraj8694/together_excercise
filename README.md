@@ -160,16 +160,16 @@ product_engineer_tech_exercise/
                     ┌──────────────────────────────────────────────┐
   HTTP Request      │              Flask Application               │
   ──────────────>   │                                              │
-                    │  controllers/        services.py              │
+                    │  controllers/        services.py             │
   POST /event  ───> │  event_controller ──> BudgetPacingService    │
                     │                       ├─ record_event()      │
                     │                       │  (circuit breaker)   │
   GET  /bid    ───> │  bid_controller   ──> ├─ get_bid()           │
                     │                       │  (pacing algorithm)  │
                     │                       │                      │
-                    │  schemas/             models/                 │
+                    │  schemas/             models/                │
                     │  Pydantic v2    <──>  SQLAlchemy (SQLite)    │
-                    │  (validation)         (persistence)           │
+                    │  (validation)         (persistence)          │
                     │                                              │
                     │  Flasgger ──> Swagger UI at /apidocs         │
                     └──────────────────────────────────────────────┘
@@ -193,26 +193,26 @@ product_engineer_tech_exercise/
 │                                                     │
 │  app.py ─── create_app() factory                    │
 │    ├── layout.py     → Component tree (sidebar +    │
-│    │                    main chat panel)             │
-│    ├── callbacks.py  → Consolidated event handlers   │
+│    │                    main chat panel)            │
+│    ├── callbacks.py  → Consolidated event handlers  │
 │    │     │                                          │
 │    │     ├── new-chat-btn  ─┐                       │
 │    │     ├── conv-btn       ├─> Single callback     │
 │    │     └── send-btn      ─┘   (ctx.triggered_id)  │
 │    │                                                │
-│    ├── components.py → Pure rendering helpers        │       ┌──────────────────┐
-│    │     ├── render_conversation()                   │       │  ADK Agent       │
-│    │     ├── parse_agent_response()                  │       │  (port 8000)     │
-│    │     └── truncate_title()                        │       │                  │
+│    ├── components.py → Pure rendering helpers       │       ┌──────────────────┐
+│    │     ├── render_conversation()                  │       │  ADK Agent       │
+│    │     ├── parse_agent_response()                 │       │  (port 8000)     │
+│    │     └── truncate_title()                       │       │                  │
 │    │                                                │       │  Root Agent      │
 │    └── agent_client.py ─────────────────────────────│──────>│  ├── Keyword     │
 │          ├── mode: "local" or "vertex"              │       │  ├── Market      │
-│          ├── create_session()                        │       │  └── Recommend.  │
-│          ├── send_message()                          │       │                  │
-│          └── parse_adk_response()                    │<──────│  Gemini 2.5 Flash│
+│          ├── create_session()                       │       │  └── Recommend.  │
+│          ├── send_message()                         │       │                  │
+│          └── parse_adk_response()                   │<──────│  Gemini 2.5 Flash│
 │                                                     │       │  + google_search │
 │  assets/styles.css → Dash auto-served CSS           │       └──────────────────┘
-│  dcc.Store (localStorage) → Persistent conversations │
+│  dcc.Store (localStorage) → Persistent conversations│
 └─────────────────────────────────────────────────────┘
 ```
 
