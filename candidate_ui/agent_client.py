@@ -131,6 +131,14 @@ class AgentClient:
         }
         try:
             resp = requests.post(url, json=payload, timeout=120)
+
+            # Session expired (server restarted) — create a new one and retry
+            if resp.status_code == 404:
+                new_session_id = self._create_local_session()
+                payload["session_id"] = new_session_id
+                self._last_new_session_id = new_session_id
+                resp = requests.post(url, json=payload, timeout=120)
+
             resp.raise_for_status()
 
             # Parse SSE-style response — extract the last agent text

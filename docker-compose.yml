@@ -9,9 +9,6 @@ services:
       - .env
     volumes:
       - agent-data:/app/keyword_researcher/.adk
-      # Mount host GCP credentials so the ADK Dev UI can authenticate
-      # Auto-detect: tries GCLOUD_CONFIG_DIR, then APPDATA/gcloud (Win), then HOME/.config/gcloud (mac/Linux)
-      - ${GCLOUD_CONFIG_DIR:-${APPDATA:-${HOME}/.config}/gcloud}:/root/.config/gcloud:ro
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/list-apps')"]
       interval: 10s

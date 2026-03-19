@@ -228,7 +228,11 @@ def register_callbacks(app: dash.Dash, agent: AgentClient) -> None:
             error_msg = ""
             error_style: dict = {"display": "none"}
             try:
+                agent._last_new_session_id = None
                 agent_reply = agent.send_message(session_id, user_text)
+                # If session was recreated (server restart), use new ID
+                if agent._last_new_session_id:
+                    session_id = agent._last_new_session_id
                 history.append({"role": "agent", "text": agent_reply})
             except ConnectionError as exc:
                 error_msg = str(exc)
